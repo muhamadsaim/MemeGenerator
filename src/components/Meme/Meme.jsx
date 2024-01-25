@@ -1,39 +1,62 @@
 import "./Meme.style.css";
-import memesData from "./utils.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import img from "./loading.gif";
+
 export default function Meme() {
   const [meme, setMeme] = useState({
-    toptext: "",
-    bottomtext: "",
-    randomImage: "https://i.imgflip.com/1g8my4.jpg",
+    topText: "",
+    bottomText: "",
+    randomImage: "",
   });
-  const [allMemesImages, setAllmemeImages] = useState(memesData);
+
+  const [allMemes, setAllMemes] = useState();
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("https://api.imgflip.com/get_memes");
+      const data = await res.json();
+      setAllMemes(data.data.memes);
+      setMeme({ randomImage: data.data.memes?.[0]?.url || img });
+    })();
+  }, []);
+
+  console.debug(allMemes, "check");
   function getMemeImage() {
-    const memesArray = allMemesImages.data.memes;
-    const randomNumber = Math.floor(Math.random() * memesArray.length);
-    const url = memesArray[randomNumber].url;
+    const randomNumber = Math.floor(Math.random() * allMemes.length);
+    const url = allMemes[randomNumber].url;
     setMeme((prevImg) => ({
       ...prevImg,
       randomImage: url,
     }));
   }
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setMeme((prevMeme) => ({
+      ...prevMeme,
+      [name]: value,
+    }));
+  }
+
   return (
     <main>
-      <div className="memeContainer">
-        <div className="inputCaptions">
+      <div className="meme--Container">
+        <div className="input--Captions">
           <input
             type="text"
             placeholder="Top text"
             className="form--input"
             name="topText"
-            value="Top Text"
+            value={meme.topText}
+            onChange={handleChange}
           />
           <input
             type="text"
             placeholder="Bottom text"
             className="form--input"
             name="bottomText"
-            value="Bottom text"
+            value={meme.bottomText}
+            onChange={handleChange}
           />
         </div>
         <div className="memeGet">
@@ -43,8 +66,8 @@ export default function Meme() {
         </div>
         <div className="meme">
           <img src={meme.randomImage} className="meme--image" alt="" />
-          <h2 className="meme--text top">topText</h2>
-          <h2 className="meme--text bottom">bottomText</h2>
+          <h2 className="meme--text top">{meme.topText}</h2>
+          <h2 className="meme--text bottom">{meme.bottomText}</h2>
         </div>
       </div>
     </main>
